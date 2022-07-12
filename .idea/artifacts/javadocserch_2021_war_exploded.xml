@@ -1,0 +1,13 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="javadocserch-2021:war exploded">
+    <output-path>$PROJECT_DIR$/out/artifacts/javadocserch_2021_war_exploded</output-path>
+    <root id="root">
+      <element id="javaee-facet-resources" facet="javadocserch-2021/web/Web" />
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="javadocserch-2021" />
+        </element>
+      </element>
+    </root>
+  </artifact>
+</component>
