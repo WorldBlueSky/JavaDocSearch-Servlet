@@ -1,28 +1,92 @@
+import sun.text.resources.no.CollationData_no;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Parser {
 
     // 指定加载文档的路径
     private static final String INPUT_FILE ="C:\\Users\\rain7\\Desktop\\docs";
 
+    private Index index = new Index();
+
+    // 通过这个方法实现单线程制作索引
     public void run(){
+        long start = System.currentTimeMillis();
+
+        ArrayList<File> fileList = new ArrayList<File>();
+
+        // 遍历文档路径,获取文档中所有的 HTML 文件
+        File rootFile = new File(INPUT_FILE);
+
+        long startEmnu = System.currentTimeMillis();
+        emnuFile(rootFile,fileList);
+        long endEmnu = System.currentTimeMillis();
+
+
+        // 对 每个html文件进行内容解析
+        long startFor = System.currentTimeMillis();
+        for (File file:fileList) {
+            System.out.println("开始解析： " +file.getName());
+            parseHTML(file);
+        }
+        long endFor = System.currentTimeMillis();
+
+
+
+        // 把内存中构造好的索引数据结构，保存到指定的文件当中
+        index.save();
+
+        long end = System.currentTimeMillis();
+
+        System.out.println("枚举文件消耗时间："+(endEmnu-startEmnu)+" ms");
+        System.out.println("中间循环的时间："+(endFor-startFor)+" ms");
+        System.out.println("索引制作的时间： "+(end-start)+" ms");
+
+    }
+
+    //通过这个方法实现多线程制作索引
+    public void runByThread(){
+        long begin = System.currentTimeMillis();
+
         ArrayList<File> fileList = new ArrayList<File>();
 
         // 遍历文档路径,获取文档中所有的 HTML 文件
         File rootFile = new File(INPUT_FILE);
         emnuFile(rootFile,fileList);
 
-        // 对 每个html文件进行内容解析
-        for (File file:fileList) {
-            System.out.println("开始解析： " +file.getName());
-
-            parseHTML(file);
+        CountDownLatch latch = new CountDownLatch(fileList.size());
+        // 2、此处为了实现多线程遍历文件制作索引，就直接引入线程池实现索引
+        ExecutorService executorService = Executors.newFixedThreadPool(8 );
+        for(File file:fileList){
+            executorService.submit(new Runnable(){
+                @Override
+                public void run() {
+                    System.out.println("开始解析:"+file.getAbsolutePath());
+                    parseHTML(file);
+                    latch.countDown();
+                }
+            });
         }
 
+        try {
+            // 等待所有线程全部完成任务
+            latch.await();
+            executorService.shutdown();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // 把内存中构造好的索引数据结构，保存到指定的文件当中
+        index.save();
+
+        long end = System.currentTimeMillis();
+        System.out.println("多线程的时间："+(end-begin)+" ms");
     }
 
     /**
@@ -30,7 +94,7 @@ public class Parser {
      * @param file
      * @return
      */
-    private String[] parseHTML(File file) {
+    private void parseHTML(File file) {
         // 解析html文件需要 解析正文 以及 标题、描述（正文的一段摘要）、url获取到
         // 要想得到描述必须拿到正文
 
@@ -43,8 +107,8 @@ public class Parser {
         //3、解析出HTML 对应的正文
         String content = parseContent(file);
 
-        //4、拿到描述
-        return null;
+        //4、把解析后的数据添加到索引当中
+        index.addDoc(title,url,content);
     }
 
     /**
@@ -113,8 +177,7 @@ public class Parser {
 
     public static void main(String[] args) {
         Parser parser = new Parser();
-        File file = new File("C:\\Users\\rain7\\Desktop\\docs\\api\\java\\lang\\class-use\\Appendable.html");
-        System.out.println(parser.parseUrl(file));
+        parser.runByThread();
     }
 
     /**
@@ -152,6 +215,7 @@ public class Parser {
             }
         }
     }
+
 
 
 }
