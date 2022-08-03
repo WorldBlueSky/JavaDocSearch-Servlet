@@ -1,5 +1,6 @@
 import sun.text.resources.no.CollationData_no;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -116,12 +117,12 @@ public class Parser {
      * @return
      */
     private  String parseContent(File file) {
-        try(FileReader fileReader = new FileReader(file)) {
+        try(BufferedReader bufferedReader = new BufferedReader(new FileReader(file),1024*1024)) { // 文件缓冲区
             // 是否要拷贝的开关
             boolean isCopy = true;
             StringBuilder content = new StringBuilder();
             while(true){
-                int ret =  fileReader.read();
+                int ret =  bufferedReader.read();
                 if(ret==-1){
                     break;
                 }
@@ -177,7 +178,9 @@ public class Parser {
 
     public static void main(String[] args) {
         Parser parser = new Parser();
-        parser.runByThread();
+        Index index = new Index();
+        index.load();
+        System.out.println("索引加载完成!");
     }
 
     /**

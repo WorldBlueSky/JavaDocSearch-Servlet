@@ -64,7 +64,7 @@ public class Index {
            //表示这个词在标题中出现的次数
            private int titleCount;
            //表示这个词在正文中出现的次数
-            private int contentCount;
+           private int contentCount;
         }
 
         // 用来统计词频的数据结构
@@ -208,8 +208,8 @@ public class Index {
         //2、从文件中解析索引数据
         try {
 
-            objectMapper.readValue(forwordFile,new TypeReference<DocInfo>(){});
-            objectMapper.readValue(invertedFile,new TypeReference<HashMap<String,ArrayList<Weight>>>(){});
+            forwardIndex = objectMapper.readValue(forwordFile,new TypeReference<ArrayList<DocInfo>>(){});
+            invertedIndex = objectMapper.readValue(invertedFile,new TypeReference<HashMap<String,ArrayList<Weight>>>(){});
 
         } catch (IOException e) {
             e.printStackTrace();
