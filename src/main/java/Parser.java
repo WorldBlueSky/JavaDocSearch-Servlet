@@ -10,6 +10,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
 public class Parser {
 
     // 指定加载文档的路径
@@ -116,7 +117,7 @@ public class Parser {
      * 解析html文件的正文,读取<div><div/>中包括的内容
      * @return
      */
-    private  String parseContent(File file) {
+    public  String parseContent(File file) {
         try(BufferedReader bufferedReader = new BufferedReader(new FileReader(file),1024*1024)) { // 文件缓冲区
             // 是否要拷贝的开关
             boolean isCopy = true;
@@ -152,6 +153,42 @@ public class Parser {
         }
 
         return null;
+    }
+
+    // 这个方法内部基于正则表达式，实现去标签，以及去除 <script>
+    public String parseContentByRegex(File file){
+        // 把整个文件的内容读取到 content中
+        String content  = readFile(file);
+        //  把<srcipt>标签去了
+        content = content.replaceAll("<script.*?>(.*?)</script>","");
+        // 把 普通标签<> 替换掉
+        content = content.replaceAll("<.*?>","");
+        // 因为上面把标签都替换成空格了，所以会发生中间有很多空格的情况，需要合并多个空格
+        content = content.replaceAll("\\s+"," ");
+        // 顺序不能错，否则发生错误
+        return content;
+    }
+
+    private String readFile(File f){
+        try(BufferedReader bufferedReader = new BufferedReader(new FileReader(f))){
+           StringBuilder content = new StringBuilder();
+            while(true){
+                int ret = bufferedReader.read();
+                if(ret==-1){
+                    break;
+                }
+                char c = (char)ret;
+                if(c=='\n'|| c=='\r'){ // 把换行去了
+                    c=' ';
+                }
+                content.append(c);
+            }
+            return content.toString();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        return "";
     }
 
     /**
