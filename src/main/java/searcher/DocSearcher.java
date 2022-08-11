@@ -1,4 +1,5 @@
-import netscape.javascript.JSUtil;
+package searcher;
+
 import org.ansj.domain.Term;
 import org.ansj.splitWord.analysis.ToAnalysis;
 
@@ -95,11 +96,11 @@ public class DocSearcher {
         // 从firstPos作为基准位置，往前找60个字符作为起始位置
         String desc="";
 
-        int descBeg = firstPos<60?0:firstPos-60;
-        if(descBeg+160>content.length()){
+        int descBeg = firstPos<100?0:firstPos-100;
+        if(descBeg+200>content.length()){
             desc = content.substring(descBeg);
         }else{
-            desc = content.substring(descBeg,descBeg+160)+"...";
+            desc = content.substring(descBeg,descBeg+200)+"...";
         }
 
         return desc;

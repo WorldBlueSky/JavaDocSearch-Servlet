@@ -1,11 +1,10 @@
-import sun.text.resources.no.CollationData_no;
+package searcher;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -70,7 +69,7 @@ public class Parser {
             executorService.submit(new Runnable(){
                 @Override
                 public void run() {
-                    System.out.println("开始解析:"+file.getAbsolutePath());
+//                    System.out.println("开始解析:"+file.getAbsolutePath());
                     parseHTML(file);
                     latch.countDown();
                 }
@@ -107,7 +106,7 @@ public class Parser {
         String url = parseUrl(file);
 
         //3、解析出HTML 对应的正文
-        String content = parseContent(file);
+        String content = parseContentByRegex(file);
 
         //4、把解析后的数据添加到索引当中
         index.addDoc(title,url,content);
@@ -160,9 +159,9 @@ public class Parser {
         // 把整个文件的内容读取到 content中
         String content  = readFile(file);
         //  把<srcipt>标签去了
-        content = content.replaceAll("<script.*?>(.*?)</script>","");
+        content = content.replaceAll("<script.*?>(.*?)</script>"," ");
         // 把 普通标签<> 替换掉
-        content = content.replaceAll("<.*?>","");
+        content = content.replaceAll("<.*?>"," ");
         // 因为上面把标签都替换成空格了，所以会发生中间有很多空格的情况，需要合并多个空格
         content = content.replaceAll("\\s+"," ");
         // 顺序不能错，否则发生错误
@@ -213,12 +212,12 @@ public class Parser {
         return part1+part2;
     }
 
-    public static void main(String[] args) {
-        Parser parser = new Parser();
-        Index index = new Index();
-        index.load();
-        System.out.println("索引加载完成!");
-    }
+//    public static void main(String[] args) {
+//        Parser parser = new Parser();
+//        Index index = new Index();
+//        index.load();
+//        System.out.println("索引加载完成!");
+//    }
 
     /**
      * 解析html文件的标题
@@ -257,5 +256,10 @@ public class Parser {
     }
 
 
-
+    public static void main(String[] args) {
+        Parser parser = new Parser();
+        System.out.println("多线程开始制作索引!");
+        parser.runByThread();
+        System.out.println("多线程制作索引完成!");
+    }
 }

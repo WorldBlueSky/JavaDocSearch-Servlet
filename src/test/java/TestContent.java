@@ -1,3 +1,5 @@
+import searcher.Parser;
+
 import java.io.*;
 
 public class TestContent {

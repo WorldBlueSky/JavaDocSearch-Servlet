@@ -1,4 +1,4 @@
-// 这个类是把 文档id 与 文档与词的相关性的 权重 进行一个包裹
+package searcher;// 这个类是把 文档id 与 文档与词的相关性的 权重 进行一个包裹
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
