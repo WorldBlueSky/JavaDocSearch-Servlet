@@ -101,9 +101,19 @@
             background: plum;
         }
 
+        .result .count{
+            color: gray;
+            margin-top: 20px;
+        }
+
         .item {
             width: 100%;
             margin-top: 22px;
+        }
+
+        .item .desc i{
+            color: red;
+            font-style: normal;
         }
 
         .item a{
@@ -122,6 +132,7 @@
             font-size: 15px;
             color: rgb(0, 128, 43);
         }
+
         
     </style>
 
@@ -162,6 +173,12 @@
             let resultDiv = document.querySelector(".result");
             // 每次查询之前清空上次结果
             resultDiv.innerHTML='';
+
+            // 先构造一个div显示结果的个数
+            let countDiv = document.createElement("div");
+            countDiv.className="count";
+            countDiv.innerHTML="当前找到 "+data.length +"个结果 ";
+            resultDiv.appendChild(countDiv);
 
             // 根据收到的结果构造页面内容
             for(let result of data){
