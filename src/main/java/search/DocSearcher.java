@@ -1,10 +1,13 @@
-package searcher;
+package search;
 
+import build.DocInfo;
+import build.Index;
+import build.Weight;
+import config.FileConfig;
 import org.ansj.domain.Term;
 import org.ansj.splitWord.analysis.ToAnalysis;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -15,7 +18,15 @@ import static org.ansj.splitWord.analysis.ToAnalysis.parse;
 public class DocSearcher {
 
     // 停用词的文件路径
-    private static final String STOP_WORD_PATH="C:\\Users\\rain7\\Desktop\\stop_word.txt";
+    private static String STOP_WORD_PATH=null;
+
+    static {
+        if (FileConfig.isOnline) {
+            STOP_WORD_PATH= "/root/javadoc/stop_word.txt";
+        } else {
+            STOP_WORD_PATH = "C:\\Users\\rain7\\Desktop\\stop_word.txt";
+        }
+    }
 
     private HashSet<String> stopwords = new HashSet<>();
 
@@ -79,7 +90,7 @@ public class DocSearcher {
         }
 
         //2、5针对多个分词结果触发的重复文档进行权重合并
-        List<Weight> allTermResult =  mergeResult(termResult);
+        List<Weight> allTermResult = mergeResult(termResult);
 
         //3、【排序】针对触发的结果按照相关程度进行降序排序
         allTermResult.sort(new Comparator<Weight>() {
@@ -199,7 +210,7 @@ public class DocSearcher {
             // 转换思路，把 后面带符号的形式 转换成 空格+单词+空格
             content = content.toLowerCase().replaceAll("\\b"+word+"\\b"," "+word+" ");
             firstPos = content.toLowerCase().indexOf(" "+word+" ");// 在正文中找到这个词的位置
-            if(firstPos!=-1){
+            if(firstPos>=0){
                 // 说明这个词找到了,直接break
                 break;
             }
@@ -219,11 +230,11 @@ public class DocSearcher {
         // 从firstPos作为基准位置，往前找60个字符作为起始位置
         String desc="";
 
-        int descBeg = firstPos<100?0:firstPos-100;
-        if(descBeg+200>content.length()){
+        int descBeg = firstPos<60?0:firstPos-60;
+        if(descBeg+160>content.length()){
             desc = content.substring(descBeg);
         }else{
-            desc = content.substring(descBeg,descBeg+200)+"...";
+            desc = content.substring(descBeg,descBeg+160)+"...";
         }
 
         // 在此处加上一个替换操作，把描述中和分词结果中相同的部分，给加上一层<i>标签，通过replaceAll实现

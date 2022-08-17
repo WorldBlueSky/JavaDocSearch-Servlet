@@ -1,4 +1,4 @@
-import searcher.Parser;
+import build.Parser;
 
 import java.io.*;
 

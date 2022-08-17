@@ -155,7 +155,7 @@
 
         // 构造一个ajax请求给 服务器
         $.ajax({
-            url:"/javadocsearch/searcher?query="+query,
+            url:"searcher?query="+query,
             type:"GET",
             success:function (data,status) {
                 if(data.length===0){

@@ -1,4 +1,4 @@
-package searcher;
+package build;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,14 +8,19 @@ import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 public class Parser {
 
     // 指定加载文档的路径
-    private static final String INPUT_FILE ="C:\\Users\\rain7\\Desktop\\docs";
+    private static final String INPUT_FILE ="C:/Users/rain7/Desktop/docs/api/";
 
     private Index index = new Index();
+
+    private AtomicLong t1 = new AtomicLong(0);
+    private AtomicLong t2 = new AtomicLong(0);
 
     // 通过这个方法实现单线程制作索引
     public void run(){
@@ -47,16 +52,16 @@ public class Parser {
         long end = System.currentTimeMillis();
 
         System.out.println("枚举文件消耗时间："+(endEmnu-startEmnu)+" ms");
-        System.out.println("中间循环的时间："+(endFor-startFor)+" ms");
-        System.out.println("索引制作的时间： "+(end-start)+" ms");
+        System.out.println("遍历文件进行解析时间："+(endFor-startFor)+" ms");
+        System.out.println("索引总共需要的制作时间： "+(end-start)+" ms");
 
     }
 
-    //通过这个方法实现多线程制作索引
+    //通过这个方法实现多线程制作索引，通过打印时间发现遍历文件进行解析 消耗的时间非常多，需要多线程遍历解析
     public void runByThread(){
         long begin = System.currentTimeMillis();
 
-        ArrayList<File> fileList = new ArrayList<File>();
+        ArrayList<File> fileList = new ArrayList<>();
 
         // 遍历文档路径,获取文档中所有的 HTML 文件
         File rootFile = new File(INPUT_FILE);
@@ -74,12 +79,15 @@ public class Parser {
                     latch.countDown();
                 }
             });
+
+
         }
 
         try {
             // 等待所有线程全部完成任务
-            latch.await();
-            executorService.shutdown();
+            latch.await();//await方法会阻塞，直到所有的选手都调用 countDown 撞线完毕后，才能阻塞结束
+            executorService.shutdown();//干掉线程池中的线程,解决 main方法已经结束，进程还未结束的问题
+            // 线程池的线程不是后台线程，main方法执行完了还在等待新任务的到来，所以总进程无法结束，需要我们手动结束线程池里面的线程
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -88,6 +96,9 @@ public class Parser {
 
         long end = System.currentTimeMillis();
         System.out.println("多线程的时间："+(end-begin)+" ms");
+
+
+        System.out.println("t1解析内容的总时间:"+t1+"   t2制作索引的总时间:"+t2);
     }
 
     /**
@@ -95,6 +106,9 @@ public class Parser {
      * @param file
      * @return
      */
+
+
+
     private void parseHTML(File file) {
         // 解析html文件需要 解析正文 以及 标题、描述（正文的一段摘要）、url获取到
         // 要想得到描述必须拿到正文
@@ -105,11 +119,19 @@ public class Parser {
         //2、解析HTML对应的URL
         String url = parseUrl(file);
 
+        long beg = System.nanoTime();
         //3、解析出HTML 对应的正文
         String content = parseContentByRegex(file);
+        long mid = System.nanoTime();
 
+        // 只有这一步是写操作，所以要保证线程安全，加锁synchronized
         //4、把解析后的数据添加到索引当中
         index.addDoc(title,url,content);
+        long end = System.nanoTime();
+
+        // parseHTML 会循环调用很多次，单次调用时间较短
+        t1.addAndGet(mid-beg);
+        t2.addAndGet(end-mid);
     }
 
     /**
@@ -202,7 +224,7 @@ public class Parser {
         // 本地文档的url        C:\Users\rain7\Desktop\docs\api\java\awt\color\CMMException.html
 
         // 线上文档的前半部分 ulr
-        String part1 ="https://docs.oracle.com/javase/8/docs";
+        String part1 ="https://docs.oracle.com/javase/8/docs/api/";
 
         // 截取本地文档中 除前半部分的固定url 的后半内容
         String part2 = file.getAbsolutePath().substring(INPUT_FILE.length());

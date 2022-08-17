@@ -1,8 +1,8 @@
 package api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import searcher.DocSearcher;
-import searcher.Result;
+import search.DocSearcher;
+import search.Result;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
